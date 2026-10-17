@@ -1,0 +1,730 @@
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="スロ攻略">
+<title>パチスロ 攻略ツール</title>
+<h2 class="sr-only">スマスロの天井・朝イチ狙い目・示唆・設定判別・解析をアプリ内で読めるオフライン対応ウェブアプリ</h2>
+<style>
+  :root{--acc:var(--host-primary);--warn:var(--host-error);--ok:var(--host-success);--gold:#f59e0b}
+  *{box-sizing:border-box}
+  body{margin:0}
+  .app{width:100%;max-width:800px;margin:0 auto;font-size:14px;color:var(--host-fg);font-family:inherit;padding:0 12px 44px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 10px;border-bottom:1px solid var(--host-border)}
+  .ttl{font-size:17px;font-weight:500;line-height:1.2}
+  .sub{font-size:10.5px;color:var(--host-fg-muted);margin-top:3px}
+  .iconbtn{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--host-border);background:transparent;color:var(--host-fg);font-size:15px;cursor:pointer;font-family:inherit}
+  .iconbtn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .status{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--host-fg-muted);padding:8px 0 2px;flex-wrap:wrap}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 7px}
+  .dot.busy{background:#f59e0b}
+  .dot.err{background:var(--warn)}
+  .tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:12px 0}
+  .tabs button{padding:10px 6px;border-radius:10px;border:1px solid var(--host-border);background:transparent;color:var(--host-fg-muted);font-size:12.5px;cursor:pointer;font-family:inherit}
+  .tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .search input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--host-border);background:var(--host-input);color:var(--host-fg);font-size:14px;font-family:inherit}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin-bottom:4px}
+  .chips button{white-space:nowrap;padding:6px 11px;border-radius:999px;border:1px solid var(--host-border);background:transparent;color:var(--host-fg-muted);font-size:11.5px;cursor:pointer;font-family:inherit}
+  .chips button.on{background:var(--host-muted);color:var(--host-fg);border-color:var(--host-border-hover)}
+  .cnt{font-size:11px;color:var(--host-fg-muted);margin:2px 0 8px}
+  .card{border:1px solid var(--host-border);border-radius:14px;padding:12px 13px;margin-bottom:9px}
+  .ctop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .cn{font-size:15px;font-weight:500;line-height:1.3}
+  .cm{font-size:10.5px;color:var(--host-fg-muted);margin-top:3px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .badge{display:inline-block;font-size:9.5px;padding:2px 6px;border-radius:5px;background:var(--host-muted);color:var(--host-fg-muted)}
+  .badge.new{background:var(--ok);color:#fff}
+  .badge.gold{background:var(--gold);color:#fff}
+  .fav{background:transparent;border:none;font-size:17px;cursor:pointer;color:var(--host-fg-muted);padding:0 2px;line-height:1}
+  .fav.on{color:var(--gold)}
+  .hero{display:flex;gap:12px;margin:11px 0 9px;flex-wrap:wrap;align-items:flex-end}
+  .hb{min-width:96px}
+  .hl{font-size:9.5px;color:var(--host-fg-muted);margin-bottom:3px}
+  .hv{font-size:19px;font-weight:500;line-height:1.2}
+  .hv.sm{font-size:13px;font-weight:400}
+  .bar{display:flex;gap:2px;margin-top:6px}
+  .bar i{width:12px;height:5px;border-radius:1px;background:var(--host-border)}
+  .bar i.on{background:var(--acc)}
+  .btnrow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .btn{padding:7px 12px;border-radius:8px;border:1px solid var(--host-border);background:var(--host-secondary);color:var(--host-secondary-fg);font-size:12px;cursor:pointer;font-family:inherit}
+  .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+  .btn.dan{color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--host-border);vertical-align:top}
+  th{color:var(--host-fg-muted);font-weight:400;font-size:10.5px}
+  td.k{width:44%}
+  .panel{border:1px solid var(--host-border);border-radius:12px;padding:12px;margin-bottom:12px;font-size:12.5px;display:none}
+  .panel.on{display:block}
+  .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--host-border);flex-wrap:wrap}
+  .prow:last-child{border-bottom:none}
+  .seg{display:flex;border:1px solid var(--host-border);border-radius:8px;overflow:hidden}
+  .seg button{padding:6px 11px;border:none;background:transparent;color:var(--host-fg-muted);font-size:11.5px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:var(--acc);color:#fff}
+  .dhead{display:flex;align-items:center;gap:10px;padding:12px 0 8px}
+  .dtitle{font-size:17px;font-weight:500;line-height:1.25;flex:1;min-width:0}
+  .dtabs{display:flex;gap:5px;overflow-x:auto;border-bottom:1px solid var(--host-border);padding-bottom:8px;margin-bottom:12px}
+  .dtabs button{white-space:nowrap;padding:7px 12px;border-radius:8px;border:1px solid var(--host-border);background:transparent;color:var(--host-fg-muted);font-size:12px;cursor:pointer;font-family:inherit}
+  .dtabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .sec{margin-bottom:14px}
+  .sec h4{margin:0 0 6px;font-size:12.5px;font-weight:500}
+  .note{margin-top:9px;width:100%;padding:9px 10px;border-radius:8px;border:1px dashed var(--host-border);background:var(--host-input);color:var(--host-fg);font-size:12.5px;font-family:inherit;resize:vertical;min-height:60px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-top:8px}
+  .ph{border:1px solid var(--host-border);border-radius:10px;overflow:hidden;position:relative}
+  .ph img{width:100%;height:86px;object-fit:cover;display:block;background:var(--host-muted)}
+  .ph .cap{font-size:10px;padding:4px 5px;color:var(--host-fg-muted);word-break:break-word;min-height:18px}
+  .ph .del{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:12px;cursor:pointer;line-height:1;padding:0}
+  .links{display:flex;flex-direction:column;gap:6px}
+  .links a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--host-border);border-radius:10px;text-decoration:none;color:var(--host-fg);font-size:12.5px}
+  .links a span.s{color:var(--host-fg-muted);font-size:11px}
+  .kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--host-border);font-size:12.5px}
+  .kv .k{color:var(--host-fg-muted);flex:0 0 40%}
+  .foot{margin-top:16px;padding-top:12px;border-top:1px solid var(--host-border);font-size:11px;color:var(--host-fg-muted);line-height:1.65}
+  .empty{padding:24px;text-align:center;color:var(--host-fg-muted);font-size:12.5px}
+  .warn{color:var(--warn)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  .reader{font-size:13px;line-height:1.7}
+  .reader h1{font-size:16px;margin:16px 0 8px;font-weight:500}
+  .reader h2{font-size:14.5px;margin:15px 0 7px;font-weight:500;padding-bottom:4px;border-bottom:1px solid var(--host-border)}
+  .reader h3{font-size:13.5px;margin:13px 0 6px;font-weight:500}
+  .reader h4,.reader h5{font-size:12.5px;margin:11px 0 5px;font-weight:500}
+  .reader p{margin:7px 0}
+  .reader ul{margin:6px 0;padding-left:18px}
+  .reader li{margin:3px 0}
+  .reader table{font-size:11.5px;margin:8px 0}
+  .reader th,.reader td{padding:5px 5px}
+  .reader a{color:var(--acc);text-decoration:none}
+  .reader img{max-width:100%;border-radius:8px;margin:6px 0;display:block}
+  .reader hr{border:none;border-top:1px solid var(--host-border);margin:12px 0}
+  .reader code{background:var(--host-muted);padding:1px 4px;border-radius:4px;font-size:11.5px}
+  .jump{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px}
+  .jump button{white-space:nowrap;padding:5px 10px;border-radius:999px;border:1px solid var(--host-border);background:transparent;color:var(--host-fg-muted);font-size:11px;cursor:pointer;font-family:inherit}
+</style>
+
+<div class="app">
+  <div class="top">
+    <div>
+      <div class="ttl">パチスロ 攻略ツール</div>
+      <div class="sub" id="verline">天井・朝イチ・示唆・解析をアプリ内で読む / 広告なし</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="iconbtn" id="refreshBtn" title="データ更新">⟳</button>
+      <button class="iconbtn" id="gearBtn" title="設定">⚙</button>
+    </div>
+  </div>
+
+  <div class="status"><span class="dot" id="dot"></span><span id="statusTx">準備中...</span></div>
+
+  <div class="panel" id="panel">
+    <div class="prow"><span>表示する狙い目</span>
+      <div class="seg" id="rateSeg"><button data-rate="eq" class="on">等価</button><button data-rate="c56">56枚</button></div>
+    </div>
+    <div class="prow"><span>起動時に自動更新</span><button class="btn" id="autoBtn">ON</button></div>
+    <div class="prow"><span>お気に入りのみ表示</span><button class="btn" id="favBtn">OFF</button></div>
+    <div class="prow"><span>データ</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" id="expBtn">書出</button>
+        <button class="btn" id="impBtn">読込</button>
+        <button class="btn dan" id="clearPage">解析キャッシュ削除</button>
+        <button class="btn dan" id="resetBtn">初期化</button>
+      </div>
+    </div>
+    <div class="prow"><span>最終更新</span><span id="lastUpd" style="color:var(--host-fg-muted)">—</span></div>
+    <div class="prow"><span>解析キャッシュ</span><span id="cacheInfo" style="color:var(--host-fg-muted)">—</span></div>
+    <div style="padding-top:9px;font-size:11px;color:var(--host-fg-muted);line-height:1.6">
+      天井・朝一はスロベース/フリック7から自動取得。解析本文は「解析を読む」タブでなな徹・ぱちタウン等の該当ページを自動解決してアプリ内表示し、端末にキャッシュします。
+    </div>
+  </div>
+
+  <div id="listView">
+    <div class="tabs">
+      <button data-tab="asa" class="on">朝イチ狙い</button>
+      <button data-tab="ten">天井狙い</button>
+      <button data-tab="all">一覧表</button>
+    </div>
+    <div class="search"><input id="q" placeholder="機種名・メーカー・示唆内容で検索"></div>
+    <div class="chips" id="chips">
+      <button data-y="all" class="on">すべて</button>
+      <button data-y="fav">お気に入り</button>
+      <button data-y="shisa">示唆データあり</button>
+      <button data-y="2026">2026年</button>
+      <button data-y="2025">2025年</button>
+      <button data-y="old">2024年以前</button>
+      <button data-y="new">新規追加</button>
+    </div>
+    <div class="cnt" id="cnt"></div>
+    <div id="out"></div>
+  </div>
+
+  <div id="detailView" style="display:none"></div>
+
+  <div class="foot">
+    ・朝イチ狙い目はリセット前提の数値。据え置きなら前日最終ゲーム数を足して判断。<br>
+    ・狙い目G数は設定1・等価交換ベースの目安。<br>
+    ・示唆・解析は実践値ベース。1回の出現で断定せず複数要素で判断。<br>
+    出典：なな徹／DMMぱちタウン／スロベース／フリック7／ちょんぼりすた／一撃／パチーモ／スロパチクエスト
+  </div>
+</div>
+
+<script>
+/* ================= 機種データ ================= */
+const BUNDLED=[
+{n:"L リコリス・リコイル",m:"サミー",y:2026,t:"AT間天井600G+α短縮",h:"—",a:{eq:"0G〜",c56:"0G〜"},an:0,b:"AT間天井600G+α短縮、CZ天井250G短縮、ゲーム数ランダム内部加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:5},
+{n:"Lパチスロ からくりサーカス2",m:"SANKYO",y:2026,t:"CZ間天井（液晶G数）500G短縮",h:"—",a:{eq:"50G〜",c56:"100G〜"},an:50,b:"CZ天井（液晶G数）500G短縮、99.2%でチャンスモード以上、最大天井200G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"L ソードアート・オンラインⅡ",m:"京楽",y:2026,t:"CZ間天井256G+α（実G数）",h:"—",a:{eq:"50G〜",c56:"—"},an:50,b:"CZ間天井256G+α短縮（実G数）、GGOモード死銃移行抽選優遇",j:"不可",ym:"CZ失敗後は様子見",s:4},
+{n:"L とある魔術の禁書目録2",m:"藤商事",y:2026,t:"AT間777G（実G数）/ CZ間200G+α（液晶）",h:"—",a:{eq:"70G〜",c56:"90G〜"},an:70,b:"AT間777G・CZ間200G+α短縮、ゲーム数ランダム加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"L ストリートファイター6",m:"サミー",y:2026,t:"—",h:"—",a:{eq:"100G〜",c56:"150G〜"},an:100,b:"通常B以上かつ約25%で天国モード、初回STでブロンズランク以上選択されやすい",j:"不可",ym:"ST終了後は様子見",s:3},
+{n:"L タクトオーパス デスティニー",m:"サミー",y:2026,t:"—",h:"—",a:{eq:"100G〜",c56:"150G〜"},an:100,b:"モードB以上（300G以内にCZ当選）濃厚、赤7ボーナスや黒夜隕鉄モード突入の可能性",j:"不可",ym:"CZ失敗後は様子見",s:3},
+{n:"L ビッグドリーム THE GOLDEN PUSHER",m:"—",y:2026,t:"AT間天井999G",h:"—",a:{eq:"150G〜",c56:"300G〜"},an:150,b:"AT間天井999G短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L 戦国コレクション6",m:"藤商事",y:2026,t:"周期天井 最大6周期",h:"—",a:{eq:"150G〜",c56:"200G〜"},an:150,b:"周期天井が最大6周期→3周期に短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"L バイオハザードRE:3",m:"サミー",y:2026,t:"ゲーム数天井650G+α短縮",h:"—",a:{eq:"150G〜",c56:"200G〜"},an:150,b:"ゲーム数天井650G+α短縮、内部でNEポイント加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L スーパーリオエース2",m:"—",y:2026,t:"ボーナス間天井500G+α短縮",h:"—",a:{eq:"ボーナス間200G〜",c56:"—"},an:200,b:"ボーナス間天井500G+α短縮、ボーナススルー天井4スルー短縮",j:"不可",ym:"ボーナス後32G回してやめ",s:3},
+{n:"L 戦国乙女5 業火を穿つ宿焔の双刃",m:"平和",y:2026,t:"実G数天井999G",h:"—",a:{eq:"250G〜",c56:"350G〜"},an:250,b:"ゲーム数天井650G短縮、周期天井6→最大4周期短縮、巫女ポイントランダム加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L アニマルスロット ドッチ",m:"—",y:2026,t:"AT間天井499G+α",h:"—",a:{eq:"250G〜",c56:"300G〜"},an:250,b:"AT間天井499G+α短縮、赤満月レベル3以上濃厚",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ モンスターハンターライズ：サンブレイク",m:"アデリオン",y:2026,t:"—",h:"—",a:{eq:"250G〜",c56:"400G〜"},an:250,b:"初回ATで盟勇クエスト当選時約30%で傀異化盟勇クエスト発生、オトモ潜水艇リプレイ回数ランダム加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L 青春ブタ野郎はバニーガール先輩の夢を見ない",m:"—",y:2026,t:"天井999G+α",h:"—",a:{eq:"250G〜",c56:"350G〜"},an:250,b:"天井699G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 獣王",m:"サミー",y:2026,t:"ゲーム数天井 最大599Gに短縮",h:"—",a:{eq:"300G〜",c56:"400G〜"},an:300,b:"ゲーム数天井を最大599Gに短縮（590〜599Gで発動）、サバ連移行まで有効",j:"不可",ym:"サバンナチャンス後は様子見",s:3},
+{n:"L 彼女、お借りします",m:"—",y:2026,t:"天井600G+α",h:"—",a:{eq:"350G〜",c56:"400G〜"},an:350,b:"天井600G+α短縮、モードB以上濃厚",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ パリピ孔明",m:"山佐",y:2026,t:"ボーナス間天井428G+α短縮",h:"—",a:{eq:"調査中",c56:"—"},an:9999,b:"ボーナス間天井428G+α短縮",j:"不可",ym:"ST終了後は様子見",s:2},
+{n:"L 転生王女と天才令嬢の魔法革命",m:"オリンピアエステート",y:2026,t:"ボーナス間410G+α短縮",h:"—",a:{eq:"調査中",c56:"—"},an:9999,b:"ボーナス間天井410G+α短縮、CZ間天井310G+α短縮、転天ポイント最大9pt加算",j:"不可",ym:"ボーナス後40G回してやめ",s:2},
+{n:"スマスロ ラグナドール",m:"ミズホ",y:2026,t:"—",h:"—",a:{eq:"調査中",c56:"—"},an:9999,b:"リセット恩恵の解析進行中",j:"不可",ym:"—",s:2},
+{n:"スマスロ ゼーガペインETR",m:"山佐ネクスト",y:2026,t:"—",h:"—",a:{eq:"調査中",c56:"—"},an:9999,b:"リセット恩恵の解析進行中",j:"不可",ym:"—",s:2},
+{n:"L 範馬刃牙",m:"—",y:2026,t:"天井最大1499G",h:"—",a:{eq:"—",c56:"—"},an:9999,b:"天井最大1499G→999G短縮。当たりは重いが1回が厚い（ATTY896枚・全体1位）",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 東京喰種",m:"スパイキー",y:2025,t:"CZ間600G / AT間1200G",h:"CZ間360G〜 / AT間650G〜",a:{eq:"0G〜",c56:"50G〜"},an:0,b:"CZ間天井が200G+αに短縮、特殊モード移行",j:"不可。朝イチCZ間200G+α消化でCZ非当選なら据え置き濃厚",ym:"AT後は引き戻しゾーン抜けでやめ",s:5},
+{n:"スマスロ モンキーターンV",m:"山佐",y:2025,t:"795G+α（6周期）",h:"400G〜（青島VS波多野後50G〜）",a:{eq:"50G〜",c56:"200G〜"},an:50,b:"AT間天井495G短縮、周期天井6→4周期、リセット時111ptまたは222ptで優出モード突入",j:"朝イチ1G目のガックンで判別可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"スマスロ 甲鉄城のカバネリ 海門決戦",m:"Sammy",y:2025,t:"996G+α（6周期）",h:"570G〜",a:{eq:"250G〜",c56:"450G〜"},an:250,b:"ST間天井596G+α短縮、周期天井4周期短縮。最大天井1536あべし→1280あべし",j:"不可",ym:"ST抜けでやめ",s:4},
+{n:"スマスロ 攻殻機動隊 S.A.C.",m:"Sammy",y:2025,t:"CZ間550G / AT間999G",h:"CZ間290G〜 / AT間600G〜",a:{eq:"100G〜",c56:"150G〜"},an:100,b:"CZ間天井350G+α短縮、AT間天井699G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"スマスロ ガンダムユニコーン 覚醒DRIVE",m:"ビスティ",y:2025,t:"AT間1400G+α / CZ間800G+α",h:"AT間780G〜 / CZ間490G〜",a:{eq:"CZ間150G〜 / AT間400G〜",c56:"CZ間200G〜 / AT間550G〜"},an:150,b:"AT間天井1000G+α短縮（液晶）、CZ間天井400G+α短縮（実G数）",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"L シン・エヴァンゲリオン",m:"—",y:2025,t:"天井650G+α短縮",h:"—",a:{eq:"90G・130G・210G各ゾーン終了付近〜、290G以降",c56:"—"},an:90,b:"朝イチモード移行、天井650G+α短縮、150G以内の規定選択優遇",j:"判別可（朝イチモードの挙動）",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"バーニングエクスプレス",m:"—",y:2025,t:"天井666G+α短縮",h:"—",a:{eq:"50G付近〜",c56:"—"},an:50,b:"天井666G+α短縮、振り分け優遇（666Gが45.5%で選択）",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"チバリヨ2プラス",m:"—",y:2025,t:"天井350Gまたは600G+α短縮",h:"—",a:{eq:"60G付近〜",c56:"—"},an:60,b:"天井350Gまたは600G+α短縮、50%で通常B以上",j:"一部推測可",ym:"ボーナス後32G回してやめ",s:4},
+{n:"スマスロ 東京リベンジャーズ",m:"—",y:2025,t:"AT間天井900G短縮",h:"—",a:{eq:"400G以降",c56:"—"},an:400,b:"AT間天井900G短縮、モード移行優遇、リセット時は機械割100%以上",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 化物語",m:"Sammy",y:2025,t:"1000G / リセット時600G",h:"650G〜",a:{eq:"350〜400Gがボーダー",c56:"—"},an:350,b:"天井600Gに短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ デビル メイ クライ5",m:"—",y:2025,t:"天井800G+α短縮",h:"—",a:{eq:"液晶380G付近〜",c56:"—"},an:380,b:"天井800G+α短縮、モード通常C以上",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ ギルティクラウン2",m:"—",y:2025,t:"—",h:"—",a:{eq:"420G付近〜",c56:"—"},an:420,b:"高確スタート、初期VCポイント平均50pt、25%以上でモードC以上",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L ULTRAMAN",m:"—",y:2025,t:"天井665G+α短縮",h:"—",a:{eq:"200G付近〜",c56:"—"},an:200,b:"天井665G+α短縮、ATレベル優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"いざ！番長",m:"—",y:2025,t:"天井600G+α短縮",h:"—",a:{eq:"230〜300G、320G付近",c56:"—"},an:230,b:"モードチャンスA以上、天井600G+α、約25%で天国",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L ToLOVEる ダークネス",m:"—",y:2025,t:"天井650G+α短縮",h:"—",a:{eq:"160G付近〜",c56:"—"},an:160,b:"天井650G+α短縮、初期ゲーム数ランダム加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ ようこそ実力至上主義の教室へ",m:"—",y:2025,t:"AT間天井630G+α短縮",h:"—",a:{eq:"300G付近〜",c56:"—"},an:300,b:"AT間天井630G+α短縮、CZモード2以上、初期穢れポイント優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 緑ドン VIVA!情熱南米編 REVIVAL",m:"—",y:2025,t:"天井800G短縮",h:"—",a:{eq:"470G付近〜",c56:"—"},an:470,b:"天井800G短縮、50%で高確スタート",j:"不可",ym:"AT終了後1000G / BIG後930G / REG後850G付近まで",s:3},
+{n:"L 機動戦士ガンダムSEED",m:"—",y:2025,t:"AT間天井750G短縮",h:"—",a:{eq:"320Gあたり〜",c56:"—"},an:320,b:"AT間天井750G短縮、BAR BIG確定",j:"不可",ym:"AT間560Gあたりまで",s:3},
+{n:"L 麻雀物語",m:"—",y:2025,t:"天井699G+α短縮",h:"—",a:{eq:"140G付近〜",c56:"—"},an:140,b:"天井699G+α短縮、仮天井300〜399G+α",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L ゴジラ",m:"—",y:2025,t:"AT間天井1000G+α短縮",h:"—",a:{eq:"40pt（30G付近）〜",c56:"—"},an:30,b:"Gポイント天井450pt+α短縮、AT間天井1000G+α短縮",j:"一部判別可",ym:"CZ間400G以上・AT間深ハマり台を狙う",s:3},
+{n:"L うしおととら 白面決戦",m:"—",y:2025,t:"天井300G短縮",h:"—",a:{eq:"積極的に狙う価値あり",c56:"—"},an:9999,b:"天井300G短縮、128G以内CZ当選で10%櫛削りノ儀、うしとらモード移行優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"スマスロ バイオハザード5",m:"—",y:2025,t:"天井666G+α短縮",h:"—",a:{eq:"250G付近〜",c56:"—"},an:250,b:"天井666G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ スーパーブラックジャック",m:"—",y:2025,t:"天井999G",h:"—",a:{eq:"270G付近〜",c56:"—"},an:270,b:"天井666G+α短縮、スイカ規定回数優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ シャーマンキング",m:"—",y:2025,t:"天井500G+α短縮",h:"—",a:{eq:"160G付近〜",c56:"—"},an:160,b:"天井500G+α短縮、憑依ポイントや巫門遁甲付与",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L ありふれた職業で世界最強",m:"—",y:2025,t:"天井700G短縮",h:"—",a:{eq:"360G付近〜",c56:"—"},an:360,b:"天井700G短縮、1G目レア役でAT書き換え抽選",j:"一部判別可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L にゃんこ大戦争 超神速",m:"—",y:2025,t:"天井922G+α短縮",h:"—",a:{eq:"270G付近〜",c56:"—"},an:270,b:"天井922G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 七つの魔剣が支配する",m:"—",y:2025,t:"天井650G+α短縮",h:"—",a:{eq:"360G付近〜",c56:"—"},an:360,b:"天井650G+α短縮、初回CZポイント獲得、ボーナスレベル優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L 島娘",m:"—",y:2025,t:"—",h:"—",a:{eq:"300G付近〜",c56:"—"},an:300,b:"最初のボーナスでBIG当選まで規定350G高確率選択、上位シナリオ優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L サラリーマン金太郎",m:"—",y:2025,t:"天井600G短縮",h:"—",a:{eq:"180G付近〜（256Gのゾーン目安）",c56:"—"},an:180,b:"天井600G短縮、50%で高確移行",j:"不可",ym:"前回AT終了後620G / BIG後570G / REG後420G付近まで",s:3},
+{n:"L 主役は銭形5",m:"—",y:2025,t:"天井850G+α短縮",h:"—",a:{eq:"プラス期待値見込める",c56:"—"},an:9999,b:"天井850G+α短縮、約50Gの初期ゲーム数加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L ダーリン・イン・ザ・フランキス",m:"—",y:2025,t:"天井390G+α短縮",h:"—",a:{eq:"99G〜",c56:"—"},an:99,b:"天井390G+α短縮",j:"不可",ym:"初回ボーナスでやめ",s:3},
+{n:"L 咲-Saki- 頂上決戦",m:"—",y:2025,t:"AT間天井600G+α短縮",h:"—",a:{eq:"164G〜",c56:"—"},an:164,b:"AT間天井600G+α短縮、周期ポイントランダム加算",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L アズールレーン THE ANIMATION",m:"—",y:2025,t:"ボーナス規定回数10回",h:"—",a:{eq:"93G付近〜",c56:"—"},an:93,b:"ボーナス規定回数10→7回、約30G前後加算",j:"不可",ym:"AT後は83G付近まで",s:3},
+{n:"スマスロ 秘宝伝",m:"—",y:2025,t:"天井499G+α短縮",h:"—",a:{eq:"約100G付近〜",c56:"—"},an:100,b:"天井499G+α短縮",j:"一部判別可（ボーナス終了画面でベカン子との遭遇出現で設定変更濃厚）",ym:"ボーナス後は様子見",s:3},
+{n:"スマスロ 沖ドキ！DUOアンコール",m:"—",y:2025,t:"—",h:"—",a:{eq:"最低100G付近〜",c56:"—"},an:100,b:"50%で通常Bまたはチャンスモード、ボーナス規定回数優遇",j:"不可",ym:"ボーナス後32G回してやめ",s:3},
+{n:"プリズムナナ",m:"—",y:2025,t:"天井555G+α短縮",h:"—",a:{eq:"151〜200G付近〜",c56:"—"},an:151,b:"モードが通常B以上へ移行、天井555G+α短縮",j:"不可",ym:"ST駆け抜け時は早めにやめ",s:3},
+{n:"スマスロ ネオプラネット",m:"—",y:2025,t:"天井500G",h:"—",a:{eq:"250G付近〜",c56:"—"},an:250,b:"モードFへ移行、天井500G",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"L 革命機ヴァルヴレイヴ2",m:"SANKYO",y:2025,t:"周期最大3周期 / 初当たり間天井1000G短縮",h:"—",a:{eq:"950〜1000G付近〜（優先度低）",c56:"—"},an:950,b:"天井周期最大3周期、初当たり間天井1000G短縮",j:"200pt付近で前兆がなければ据え置き濃厚",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"L 新・鬼武者3",m:"—",y:2025,t:"周期天井6→4周期短縮",h:"—",a:{eq:"通常時500G付近〜",c56:"—"},an:500,b:"周期天井6→4周期短縮、最大222ptで鬼モード移行",j:"不可",ym:"1周期目スルーで期待値が大きく下がるので早めにやめ",s:2},
+{n:"L とある科学の超電磁砲2",m:"藤商事",y:2025,t:"AT間999G+α（リセット時699G+α）",h:"760G〜",a:{eq:"301〜350G付近〜",c56:"—"},an:301,b:"AT間最大天井699G+αに短縮",j:"不可。200〜400G台のCZ天井に設定差",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 鉄拳6",m:"山佐ネクスト",y:2025,t:"900pt+α（平均747G）",h:"550G〜（AT後0〜1スルー）",a:{eq:"150G〜",c56:"200G〜"},an:150,b:"ボーナス間天井最大500pt短縮、スルー天井2回短縮",j:"不可",ym:"ボーナス後は様子見",s:3},
+{n:"Lパチスロ炎炎ノ消防隊2",m:"SANKYO",y:2025,t:"ボーナス間850G / 炎炎ループ間2000G",h:"ボーナス間670G〜 / 炎炎ループ間1500G〜",a:{eq:"朝一88Gのゾーン狙い",c56:"—"},an:88,b:"AT間天井850G→650G短縮、リセット時約33%で天国移行",j:"88G付近で規定ゲーム数前兆が出れば前日即やめか設定変更が濃厚",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ マギアレコード",m:"ミズホ",y:2025,t:"ボーナス間950pt+α（約600G）",h:"550pt（367G）〜",a:{eq:"290pt付近〜",c56:"—"},an:290,b:"マギアポイント天井600〜699pt+αに短縮",j:"不可",ym:"ボーナス後は様子見",s:3},
+{n:"スマスロ ヨルムンガンド",m:"山佐ネクスト",y:2025,t:"AT間999G+α",h:"550G〜",a:{eq:"200G〜",c56:"250G〜"},an:200,b:"ボーナス天井450G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 虚構推理",m:"ディ・ライト",y:2025,t:"最大1000G",h:"虚構真偽間500G〜",a:{eq:"300G〜",c56:"400G〜"},an:300,b:"虚構真偽間天井700G短縮、ゲーム数12〜72G（平均30.9G）短縮、50%で高確スタート",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ 真打 吉宗",m:"大都技研",y:2025,t:"AT間1500G+α / CZ間1000G+α",h:"AT間680G〜 / CZ間460G〜",a:{eq:"350G〜",c56:"450G〜"},an:350,b:"AT間天井1000G+α短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ ミリオンゴッド 神々の軌跡",m:"ミズホ",y:2025,t:"GG間1480G",h:"AT後580G〜（奇数挙動）/ 700G〜（偶数挙動）",a:{eq:"700G〜",c56:"800G〜"},an:700,b:"通常B以上スタート、約25%で天国スタート、初回ファイターズバトルのランク優遇",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:4},
+{n:"スマスロ 北斗の拳 転生の章2",m:"Sammy",y:2025,t:"最大1536あべし（約1024G）",h:"850あべし（567G）〜",a:{eq:"300G〜（700〜800あべし）",c56:"500G〜（800〜900あべし）"},an:300,b:"液晶G数天井800G+α→200G+α、実G数天井1200G→777G短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"傷物語 -始マリノ刻-",m:"—",y:2024,t:"AT間天井999G",h:"—",a:{eq:"0G〜",c56:"50G〜"},an:0,b:"AT間天井999G→400G短縮、AT初当たり約25%で降臨ノ儀、リセット時は天国orリセットモード移行",j:"一部判別可。朝イチ挙動とCB規定回数で推測",ym:"AT後は引き戻しゾーン抜けでやめ",s:5},
+{n:"スマスロ 北斗の拳",m:"Sammy",y:2023,t:"1268G+α（リセット時800G+α）",h:"580G〜",a:{eq:"150G〜",c56:"—"},an:150,b:"天井が800G+αに短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"パチスロ 甲鉄城のカバネリ",m:"Sammy",y:2022,t:"1000G+α / 短縮天井650G+α",h:"500G〜 / 短縮天井180G〜",a:{eq:"50G〜",c56:"200G〜"},an:50,b:"AT間天井1000G→650G短縮、朝一特殊状態中オールスター目成立でST突入",j:"不可",ym:"ST抜けでやめ",s:3},
+{n:"パチスロ 花の慶次 武威",m:"ニューギン",y:2024,t:"最大991G（870G以上でAT確定）",h:"220G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"スマスロ ゴッドイーター リザレクション",m:"山佐ネクスト",y:2024,t:"1000G+α（リセット時600G+α）",h:"590G〜",a:{eq:"180G〜",c56:"—"},an:180,b:"天井600G+αに短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ コードギアス",m:"Sammy",y:2023,t:"1000G+α",h:"0スルー350G〜 / 1スルー以降550G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"スマスロ 転生したらスライムだった件",m:"山佐",y:2024,t:"転スラpt最大1200pt+α / 実G1000G",h:"650pt〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"スマスロ 忍魂参",m:"大都技研",y:2024,t:"979G+α（リセット時579G）",h:"610G〜",a:{eq:"リセット時310G〜",c56:"—"},an:310,b:"天井が579Gに短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"Sガンツ極",m:"エフ",y:2024,t:"1600G+α",h:"AT間800G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"S新鬼武者2",m:"ユニバーサル",y:2024,t:"AT間1000G+α",h:"AT間500G〜 / CZ間200G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2},
+{n:"スマスロ エウレカセブン4",m:"Sammy",y:2024,t:"1550WAVE（平均775G）/ G数999G+α",h:"550G〜",a:{eq:"リセット時150G〜",c56:"—"},an:150,b:"リセット時に天井短縮",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:3},
+{n:"スマスロ うみねこのなく頃に2",m:"オーイズミ",y:2024,t:"CZ間200G",h:"CZ天井（CZ間200G）が近い台",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"CZ後は様子見",s:2},
+{n:"沖ドキ！ゴージャス-30",m:"エレコ",y:2024,t:"通常時999G / チャンス200G / 天国32G",h:"600G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"ボーナス後32G回してやめ",s:2},
+{n:"スマスロ からくりサーカス",m:"SANKYO",y:2023,t:"CZ間1200G / AT間2500G",h:"CZ間450G〜",a:{eq:"—",c56:"—"},an:9999,b:"—",j:"不可",ym:"AT後は引き戻しゾーン抜けでやめ",s:2}
+];
+
+/* ================= 示唆データ ================= */
+const SHISA={
+"スマスロ 東京喰種":[
+ {t:"AT終了画面の設定示唆",rows:[["金木研","デフォルト"],["亜門鋼太朗＋真戸暁","奇数設定示唆"],["篠原幸紀＋鈴屋什造","偶数設定示唆"],["笛口リョーコ＋雛実","高設定示唆（弱）"],["ウタ＋イトリ＋四方蓮示","高設定示唆（強）"],["神代利世","設定1否定"],["金木研＋霧島董香（金枠）","設定4以上濃厚"],["あんてぃく全員集合（虹枠）","設定6濃厚"]]},
+ {t:"トロフィー",rows:[["虹トロフィー","設定6濃厚"],["喰種トロフィー","設定5以上濃厚"],["金トロフィー","設定4以上濃厚"],["銀トロフィー","設定3以上濃厚"],["銅トロフィー","設定2以上濃厚"],["黒トロフィー","次回ATでトロフィー示唆濃厚"]]},
+ {t:"モード示唆（CZ終了画面のエンドカード）",rows:[["月山習","天国準備以上"],["神代利世","天国濃厚"]]},
+ {t:"アイキャッチ（通常時ステージチェンジ）",rows:[["通常キャラ","規定ゲーム数・本前兆を示唆"],["レアキャラ（霧嶋董香・笛口雛実など）","上位モード滞在の可能性大"],["喰種ver.","どのキャラでも100G以内のCZ当選濃厚"]]},
+ {t:"操作",rows:[["CZ終了画面でPUSHボタン","エンドカードが出現（モード・設定示唆）"]]},
+ {t:"注意",rows:[["AT終了画面","設定6でも約69%はデフォルト。1〜2回で判断しない"]]}
+],
+"スマスロ モンキーターンV":[
+ {t:"設定示唆",rows:[["弱レア役でのAT直撃","設定4以上濃厚（弱チェ・ボート・弱チャンス目）"],["AT終了画面 虹トロフィー","設定6濃厚"],["AT終了画面 ケロット柄トロフィー","設定5以上濃厚"],["AT終了画面 金トロフィー","設定4以上濃厚"],["AT終了画面 銅トロフィー","設定2以上濃厚"],["AT終了画面 黒メダル","高設定示唆（強）"],["AT終了画面 黄メダル","高設定示唆（弱）"],["AT終了画面 青メダル","偶数設定示唆"],["獲得枚数表示 666","設定6濃厚"],["獲得枚数表示 803","設定5以上濃厚"],["獲得枚数表示 456","設定4以上濃厚"],["舟券の色 虹","設定6濃厚"],["舟券の色 金","設定4以上濃厚"],["舟券の色 銀","偶数設定濃厚"],["AT開始画面 山佐キャラ","設定5以上濃厚"],["上位AT開始画面 青島＋波多野","設定5以上濃厚＋AT継続濃厚"],["上位AT開始画面 ドレス","高設定示唆"],["上位AT開始画面 レース服","偶数設定示唆"],["エンディング中のボイス（サブ液晶タッチ）","紫=6濃厚／5以上／4以上／偶数 など"],["ライバルモード突入率","設定1 30.0% → 設定6 44.0%"],["AT後の即優出モード突入率","設定1 1.6% → 設定6 3.7%"],["激走チャージ中のEXアイテム獲得率","ボート・弱チェリーで設定1 25.0% → 設定6 43.0%"]]},
+ {t:"モード示唆",rows:[["AT終了画面のヘルメット ロゴ＋V","天国濃厚"],["AT終了画面のヘルメット ロゴ＋キラキラ","通常B or 天国濃厚"],["AT終了画面のヘルメット ロゴのみ","通常Bの期待度アップ"],["通常時のキャラセリフ（櫛田・洞口親父）","通常B or 天国濃厚"],["激走チャージ後のサブ液晶セリフ（青島・赤ランプ）","通常B or 天国濃厚／当該周期AT期待度約50%"]]},
+ {t:"周期示唆",rows:[["予想屋のセリフ（紫）","当該周期でAT当選濃厚"],["予想屋のセリフ（赤）2レース以内に注目","当該or次周期でAT当選濃厚"],["ステージチェンジ 黒","当該周期のAT当選期待度アップ"],["アイキャッチ後のライバルヘルメット","ライバルモード示唆（榎木=優出期待度50%以上など）"]]},
+ {t:"黒メダル出現後",rows:[["次のAT終了画面","メダル以上の出現濃厚＋ケロットトロフィー出現率が大幅アップ"]]}
+],
+"スマスロ 甲鉄城のカバネリ 海門決戦":[
+ {t:"ST終了画面",rows:[["無名＆菖蒲（水着）","設定6濃厚"],["全員集合","高設定示唆"],["通常","デフォルト"]]},
+ {t:"トロフィー",rows:[["サミートロフィー","出現で設定2以上濃厚（非常に出にくい）"]]},
+ {t:"その他の示唆",rows:[["カバネリボーナス中のキャラ表示","設定示唆（設定1は男女の出現割合が均等）"],["美馬の出現率","総消化ゲーム数で変化。設定4以上は5001〜7000Gでアップ、7001〜8000Gで大幅アップ"],["獲得枚数表示","特定枚数で特定設定以上濃厚"],["おみくじ・アイテムくじ","設定示唆"],["おみくじ・輪廻くじ","周期・規定ポイントを示唆"],["ボイス","設定示唆"]]},
+ {t:"注意",rows:[["水着画面","当日の総消化ゲーム数で出現率が変化。7001〜8000Gがチャンス"]]}
+],
+"スマスロ 北斗の拳 転生の章2":[
+ {t:"筐体ランプ（通常時100G消化ごと）",rows:[["筐体上部左右のランプ点灯","滞在モード・規定あべしへの近さ・設定のいずれかを示唆"],["モード示唆が矛盾した場合","特定設定以上濃厚"]]},
+ {t:"AT終了時",rows:[["サブ液晶のサミートロフィー","銅＜銀＜金＜キリン＜虹 の順で良い示唆"],["北斗揃い後のSPエピソード","設定示唆"]]},
+ {t:"状態示唆",rows:[["カサンドラステージ","高確示唆（伝承モードでも移行するので注意）"],["非前兆中の第3停止告知が頻発","高確の期待度アップ"],["ベル・弱チェリー・スイカでLED白点滅","高確以上？"]]},
+ {t:"設定差",rows:[["AT初当たり確率／伝承モード終了時の高確移行率／低確中の高確移行率／天破の刻突入率","設定差あり"]]}
+],
+"スマスロ ミリオンゴッド 神々の軌跡":[
+ {t:"終了画面",rows:[["GG終了画面にユニバプレート出現","高設定示唆"]]},
+ {t:"裏ボタン（GODボタン）",rows:[["GG入賞画面／GG終了画面／SGG引き戻しゾーン／Z-ZONEで押す","筐体上部LEDが発光し、色に応じて示唆"],["G-ZONE","5Gで引き戻し告知。通常時移行後も最大31Gの前兆あり"]]},
+ {t:"やめ時",rows:[["引き戻し否定","合計36G消化してからやめ。ガイアステージ・高モード滞在ならフォロー"]]}
+]
+};
+
+/* ================= 解析ソース ================= */
+const SITES=[
+ {k:"nana",n:"なな徹",s:q=>"https://nana-press.com/?s="+enc(q)},
+ {k:"ptown",n:"ぱちタウン",s:q=>"https://p-town.dmm.com/machines/search?keyword="+enc(q)},
+ {k:"chonbo",n:"ちょんぼりすた",s:q=>"https://chonborista.com/?s="+enc(q)},
+ {k:"1geki",n:"一撃",s:q=>"https://1geki.jp/?s="+enc(q)},
+ {k:"quest",n:"スロパチクエスト",s:q=>"https://www.slopachi-quest.com/?s="+enc(q)}
+];
+
+/* ================= storage ================= */
+const LS={d:"pst_data_v1",f:"pst_fav_v1",nt:"pst_note_v1",mt:"pst_meta_v1",op:"pst_opt_v1",sh:"pst_shisa_v1",id:"pst_ids_v1"};
+const J=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}};
+const S=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+let DATA=J(LS.d,null)||JSON.parse(JSON.stringify(BUNDLED));
+let favs=new Set(J(LS.f,[]));
+let notes=J(LS.nt,{});
+let userSh=J(LS.sh,{});
+let idMap=J(LS.id,{});
+let meta=J(LS.mt,{t:0,src:""});
+let opt=J(LS.op,{rate:"eq",auto:true,favOnly:false});
+let tab="asa", yFilter="all", busy=false, cur=null, curTab="yame", view="list";
+let readerSite="nana", readerUrl=null, readerMd="", readerBusy=false;
+
+const shisaOf=n=>(SHISA[n]||[]).concat(userSh[n]||[]);
+const hasShisa=n=>shisaOf(n).length>0;
+
+/* ================= helpers ================= */
+const norm=s=>String(s||"").replace(/[★☆\s\u3000]/g,"").replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/Ｌ/g,"L").toLowerCase();
+function sim(a,b){a=norm(a);b=norm(b);if(!a||!b)return 0;if(a===b)return 1000;
+  if(a.indexOf(b)>=0||b.indexOf(a)>=0)return Math.min(a.length,b.length)/Math.max(a.length,b.length)*100;return 0;}
+function matchRec(name){let best=null,bs=0;DATA.forEach(o=>{const s=sim(o.n,name);if(s>bs){bs=s;best=o}});return bs>=55?best:null;}
+function num(s){const m=String(s||"").match(/\d+/);return m?parseInt(m[0],10):9999;}
+const clean=s=>String(s||"").replace(/^[:：\s*　]+/,"").replace(/\s+/g," ").trim();
+function stamp(d){d=d||new Date();const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"/"+p(d.getMonth()+1)+"/"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());}
+const enc=s=>encodeURIComponent(s);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+/* ================= IndexedDB ================= */
+let db=null;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open("pstapp",2);
+  r.onupgradeneeded=e=>{const d=e.target.result;
+    if(!d.objectStoreNames.contains("img")){const st=d.createObjectStore("img",{keyPath:"id",autoIncrement:true});st.createIndex("m","m");}
+    if(!d.objectStoreNames.contains("page")){d.createObjectStore("page",{keyPath:"u"});}};
+  r.onsuccess=e=>res(e.target.result);r.onerror=()=>rej(r.error);});}
+const tx=(store,mode)=>db.transaction(store,mode).objectStore(store);
+async function dbGet(m){if(!db)db=await openDB();return new Promise(res=>{const rq=tx("img","readonly").index("m").getAll(m);rq.onsuccess=()=>res(rq.result||[]);rq.onerror=()=>res([]);});}
+async function dbPut(rec){if(!db)db=await openDB();return new Promise(res=>{const rq=tx("img","readwrite").put(rec);rq.onsuccess=()=>res(rq.result);rq.onerror=()=>res(null);});}
+async function dbDel(id){if(!db)db=await openDB();return new Promise(res=>{tx("img","readwrite").delete(id);res();});}
+async function pageGet(u){if(!db)db=await openDB();return new Promise(res=>{const rq=tx("page","readonly").get(u);rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);});}
+async function pagePut(rec){if(!db)db=await openDB();return new Promise(res=>{tx("page","readwrite").put(rec);res();});}
+async function pageCount(){if(!db)db=await openDB();return new Promise(res=>{const rq=tx("page","readonly").count();rq.onsuccess=()=>res(rq.result||0);rq.onerror=()=>res(0);});}
+async function pageClear(){if(!db)db=await openDB();return new Promise(res=>{tx("page","readwrite").clear();res();});}
+const urlCache=new Map();
+function imgURL(rec){if(rec.url)return rec.url;if(urlCache.has(rec.id))return urlCache.get(rec.id);const u=URL.createObjectURL(rec.blob);urlCache.set(rec.id,u);return u;}
+function resize(file,max){return new Promise(res=>{const fr=new FileReader();
+  fr.onload=()=>{const im=new Image();im.onload=()=>{let w=im.width,h=im.height;const sc=Math.min(1,max/Math.max(w,h));w=Math.round(w*sc);h=Math.round(h*sc);
+    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);c.toBlob(b=>res(b||file),"image/jpeg",0.82);};
+    im.onerror=()=>res(file);im.src=fr.result;};fr.onerror=()=>res(file);fr.readAsDataURL(file);});}
+
+/* ================= fetch ================= */
+const PROXIES=[u=>"https://r.jina.ai/"+u,u=>"https://api.allorigins.win/raw?url="+enc(u),u=>"https://corsproxy.io/?url="+enc(u)];
+async function grab(url,min){for(const p of PROXIES){try{const r=await fetch(p(url),{cache:"no-store"});if(!r.ok)continue;const t=await r.text();if(t&&t.length>(min||800))return t;}catch(e){}}return null;}
+
+function htmlToMd(root){
+  const out=[];
+  const walk=(el)=>{
+    [...el.childNodes].forEach(n=>{
+      if(n.nodeType===3){const t=n.textContent.replace(/\s+/g," ");if(t.trim())out.push(t);return;}
+      if(n.nodeType!==1)return;
+      const tag=n.tagName.toLowerCase();
+      if(/^(script|style|noscript|svg|form|iframe)$/.test(tag))return;
+      if(/^h[1-6]$/.test(tag)){out.push("\n"+"#".repeat(+tag[1])+" "+n.textContent.trim()+"\n");return;}
+      if(tag==="img"){const s=n.getAttribute("src");if(s&&s.indexOf("1x1.trans")<0)out.push("![]("+(s.startsWith("http")?s:location.origin)+")");return;}
+      if(tag==="br"){out.push("\n");return;}
+      if(tag==="hr"){out.push("\n---\n");return;}
+      if(tag==="table"){n.querySelectorAll("tr").forEach(tr=>{const c=[...tr.querySelectorAll("th,td")].map(x=>x.textContent.replace(/\s+/g," ").trim());
+        if(c.length)out.push("\n| "+c.join(" | ")+" |");});out.push("\n");return;}
+      if(tag==="li"){out.push("\n- "+n.textContent.replace(/\s+/g," ").trim());return;}
+      if(tag==="a"){const h=n.getAttribute("href");const t=n.textContent.replace(/\s+/g," ").trim();
+        if(t&&h&&h.indexOf("javascript")<0)out.push("["+t+"]("+(h.startsWith("http")?h:location.origin+h)+")");else if(t)out.push(t);return;}
+      walk(n);
+      if(/^(p|div|section|article|ul|ol|tr)$/.test(tag))out.push("\n");
+    });
+  };
+  walk(root);
+  return out.join("").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+\n/g,"\n");
+}
+function extractMain(doc){
+  const sels=["main","article",".entry-content",".post-content","#content",".article",".content"];
+  for(const s of sels){const el=doc.querySelector(s);if(el&&el.textContent.length>600)return el;}
+  const b=doc.body; if(!b)return doc.documentElement;
+  ["nav","header","footer","aside","script","style"].forEach(t=>b.querySelectorAll(t).forEach(e=>e.remove()));
+  return b;
+}
+function trimNav(md,name){
+  const key=norm(name).slice(0,4);
+  const lines=md.split("\n");
+  for(let i=0;i<Math.min(lines.length,80);i++){
+    if(/^#{1,3}\s/.test(lines[i])&&norm(lines[i]).indexOf(key)>=0)return lines.slice(i).join("\n");
+  }
+  return md;
+}
+function inline(s){
+  s=esc(s);
+  s=s.replace(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g,(m,a,u)=>u.indexOf("1x1.trans")>=0?"":'<img loading="lazy" src="'+u+'" alt="'+a+'" onerror="this.style.display=\'none\'">');
+  s=s.replace(/\[([^\]]+)\]\(([^)\s]+)[^)]*\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  return s;
+}
+function mdToHtml(md){
+  const L=md.split("\n"); let h="",i=0;
+  while(i<L.length){
+    const l=L[i];
+    if(/^\s*\|.*\|\s*$/.test(l)){
+      const rows=[]; while(i<L.length&&/^\s*\|.*\|\s*$/.test(L[i])){rows.push(L[i]);i++;}
+      h+='<table>'; rows.forEach((r,ix)=>{
+        if(/^\s*\|[\s:\-|]+\|\s*$/.test(r))return;
+        const cells=r.replace(/^\s*\||\|\s*$/g,"").split("|").map(c=>inline(c.trim()));
+        h+='<tr>'+cells.map(c=>(ix===0?"<th>":"<td>")+c+(ix===0?"</th>":"</td>")).join("")+'</tr>';});
+      h+='</table>'; continue;
+    }
+    const hm=l.match(/^(#{1,6})\s+(.*)$/);
+    if(hm){const lv=Math.min(hm[1].length,5);h+='<h'+lv+'>'+inline(hm[2])+'</h'+lv+'>';i++;continue;}
+    if(/^\s*(---|\*\*\*)\s*$/.test(l)){h+="<hr>";i++;continue;}
+    if(/^\s*[-*]\s+/.test(l)){h+="<ul>";while(i<L.length&&/^\s*[-*]\s+/.test(L[i])){h+="<li>"+inline(L[i].replace(/^\s*[-*]\s+/,""))+"</li>";i++;}h+="</ul>";continue;}
+    if(!l.trim()){i++;continue;}
+    h+="<p>"+inline(l)+"</p>";i++;
+  }
+  return h;
+}
+function harvestLinks(txt){
+  const res=[];
+  if(/<a\s/i.test(txt)){
+    const doc=new DOMParser().parseFromString(txt,"text/html");
+    doc.querySelectorAll("a[href]").forEach(a=>{const t=a.textContent.replace(/\s+/g," ").trim();const h=a.getAttribute("href");
+      if(t&&t.length<45&&h&&h.indexOf("javascript")<0)res.push([t,h.startsWith("http")?h:location.origin+h]);});
+  }else{
+    const re=/\[([^\]]{1,45})\]\((https?:[^)\s]+)\)/g;let m;
+    while((m=re.exec(txt)))res.push([m[1],m[2]]);
+  }
+  return res;
+}
+async function resolvePage(site,name){
+  const cached=idMap[site.k+":"+name];
+  if(cached)return cached;
+  const txt=await grab(site.s(name),1500);
+  if(!txt)return null;
+  let best=null,bs=0;
+  harvestLinks(txt).forEach(([t,u])=>{
+    if(site.k==="nana"&&!/\/kaiseki\/machine\/\d+\/?$/.test(u.replace(/[?#].*$/,"")))return;
+    if(site.k==="ptown"&&!/\/machines\/\d+$/.test(u.replace(/[?#].*$/,"")))return;
+    const s=sim(t,name); if(s>bs){bs=s;best=u;}
+  });
+  if(!best||bs<50)return null;
+  idMap[site.k+":"+name]=best;S(LS.id,idMap);
+  return best;
+}
+async function loadPage(url,force){
+  if(!force){const c=await pageGet(url); if(c&&Date.now()-c.at<3*864e5)return c.md;}
+  const txt=await grab(url,2000); if(!txt)return null;
+  let md;
+  if(/^\s*</.test(txt)&&/<(div|p|table|body)/i.test(txt)){
+    const doc=new DOMParser().parseFromString(txt,"text/html");
+    md=htmlToMd(extractMain(doc));
+  }else md=txt;
+  md=md.replace(/^Title:.*$/m,"").replace(/^URL Source:.*$/m,"").replace(/^Markdown Content:\s*$/m,"");
+  await pagePut({u:url,md:md,at:Date.now()});
+  return md;
+}
+
+/* ================= 更新 ================= */
+const SOURCES=[{url:"https://slobase.jp/rankings/ceiling",kind:"tenjo"},
+ {url:"https://flick7.net/slot/reset_guide2025.php",kind:"reset"},
+ {url:"https://flick7.net/slot/reset_guide.php",kind:"reset"}];
+function parseTenjo(txt){const out=[];
+  if(/<table/i.test(txt)){const doc=new DOMParser().parseFromString(txt,"text/html");
+    doc.querySelectorAll("table tr").forEach(tr=>{const c=[...tr.querySelectorAll("td")];if(c.length<6)return;
+      const a=c[1].querySelector("a");
+      out.push({n:clean(c[1].textContent.replace(/^★/,"")),m:clean(c[2].textContent),t:clean(c[3].textContent),h:clean(c[4].textContent),b:clean(c[5].textContent),u:a?a.getAttribute("href"):""});});
+  }else{txt.split("\n").forEach(l=>{if(!l.trim().startsWith("|"))return;const c=l.split("|").map(s=>s.trim());if(c.length<8)return;
+    const nm=c[2].replace(/\[([^\]]+)\]\(([^)]+)\)/,"$1");const url=(c[2].match(/\]\((https?:[^)]+)\)/)||[])[1]||"";
+    out.push({n:clean(nm.replace(/^★/,"")),m:clean(c[3]),t:clean(c[4]),h:clean(c[5]),b:clean(c[6]),u:url});});}
+  return out.filter(r=>r.n&&r.t&&r.t!=="天井G数");}
+function parseReset(txt){const out=[];
+  const feed=(name,items)=>{if(!name||!items.length)return;
+    const pick=ks=>{for(const it of items){for(const k of ks){if(it.indexOf(k)===0)return clean(it.slice(k.length));}}return"";};
+    out.push({n:clean(name.replace(/^#+\s*/,"")),b:pick(["リセット恩恵","リセット後の恩恵"]),j:pick(["リセット判別","リセットの判別"]),a:pick(["朝一の狙い目","朝一狙い目","朝イチの狙い目","朝イチ狙い目"]),h:pick(["据え置き時","据え置きの場合"])});};
+  if(/<h[34]/i.test(txt)){const doc=new DOMParser().parseFromString(txt,"text/html");
+    doc.querySelectorAll("h3,h4").forEach(hd=>{const name=hd.textContent.trim();if(!name||name.length>40)return;
+      const items=[];let s=hd.nextElementSibling;
+      while(s&&!/^H[234]$/.test(s.tagName)){if(/^(UL|OL)$/.test(s.tagName))[...s.querySelectorAll("li")].forEach(li=>items.push(li.textContent.trim()));s=s.nextElementSibling;}
+      feed(name,items);});
+  }else{let c=null,items=[];txt.split("\n").forEach(l=>{const m=l.match(/^#{3,4}\s+(.+)$/);
+    if(m){feed(c,items);c=m[1];items=[];return;}const b=l.match(/^[-*]\s+(.+)$/);if(b&&c)items.push(b[1].replace(/\*\*/g,"").trim());});feed(c,items);}
+  return out.filter(r=>r.n&&(r.b||r.a));}
+function merge(list,kind){let up=0,add=0;
+  list.forEach(r=>{let rec=matchRec(r.n);
+    if(!rec){ if(kind==="tenjo"&&r.t){rec={n:r.n,m:r.m||"—",y:new Date().getFullYear(),t:r.t,h:r.h||"—",a:{eq:"—",c56:"—"},an:9999,b:r.b||"—",j:"調査中",ym:"—",s:2,u:r.u||"",nw:1};DATA.push(rec);add++;}
+      else if(kind==="reset"&&(r.a||r.b)){rec={n:r.n,m:"—",y:new Date().getFullYear(),t:"—",h:r.h||"—",a:{eq:r.a||"—",c56:"—"},an:num(r.a),b:r.b||"—",j:r.j||"調査中",ym:"—",s:2,nw:1};DATA.push(rec);add++;}
+      else return;
+    }else{ if(kind==="tenjo"){if(r.t)rec.t=r.t;if(r.h)rec.h=r.h;if(r.b)rec.b=r.b;if(r.u)rec.u=r.u;}
+      else{if(r.b)rec.b=r.b;if(r.j)rec.j=r.j;if(r.h)rec.h=r.h;if(r.a&&r.a!=="—"){rec.a={eq:r.a,c56:(rec.a&&rec.a.c56)||"—"};rec.an=num(r.a);}}
+      up++;} rec.upd=Date.now();});
+  return{up,add};}
+async function refresh(){if(busy)return;busy=true;setStatus("busy","最新データを取得中...");
+  let up=0,add=0,ok=0;
+  for(const s of SOURCES){const txt=await grab(s.url);if(!txt)continue;
+    try{const rows=s.kind==="tenjo"?parseTenjo(txt):parseReset(txt);if(!rows.length)continue;
+      const res=merge(rows,s.kind);up+=res.up;add+=res.add;ok++;}catch(e){}}
+  busy=false;
+  if(ok){DATA.sort((a,b)=>a.an-b.an);S(LS.d,DATA);meta={t:Date.now(),src:ok+"件のソース"};S(LS.mt,meta);
+    setStatus("","更新完了 — "+up+"件更新"+(add?"、"+add+"機種追加":"")+"（"+stamp()+"）");}
+  else setStatus("err","取得できませんでした。保存済みデータを使用中");
+  render();}
+
+/* ================= render ================= */
+const $=id=>document.getElementById(id);
+const out=$("out");
+function setStatus(c,t){$("dot").className="dot"+(c?" "+c:"");$("statusTx").textContent=t;}
+function pass(o){
+  if(yFilter==="fav"&&!favs.has(o.n))return false;
+  if(yFilter==="new"&&!o.nw)return false;
+  if(yFilter==="shisa"&&!hasShisa(o.n))return false;
+  if(yFilter==="old"){if(o.y>2024)return false;} else if(/^\d{4}$/.test(yFilter)){if(String(o.y)!==yFilter)return false;}
+  const q=$("q").value.trim().toLowerCase();
+  if(q&&!(o.n+" "+o.m).toLowerCase().includes(q))return false;
+  return true;}
+function bars(n){let h='<div class="bar">';for(let i=1;i<=5;i++)h+='<i class="'+(i<=n?"on":"")+'"></i>';return h+"</div>";}
+function card(o,ten){
+  const isV=favs.has(o.n),main=o.a&&(o.a[opt.rate]||o.a.eq)||"—";
+  let h='<div class="card"><div class="ctop"><div style="min-width:0"><div class="cn">'+o.n+'</div>'+
+    '<div class="cm"><span>'+o.m+'</span><span>・'+o.y+'年</span>'+(o.nw?'<span class="badge new">新規</span>':'')+
+    (hasShisa(o.n)?'<span class="badge gold">示唆</span>':'')+(o.upd?'<span class="badge">更新 '+new Date(o.upd).toLocaleDateString("ja-JP")+'</span>':'')+'</div></div>'+
+    '<button class="fav '+(isV?"on":"")+'" data-f="'+o.n+'">'+(isV?"★":"☆")+'</button></div>';
+  if(ten)h+='<div class="hero"><div class="hb" style="flex:1"><div class="hl">天井</div><div class="hv sm">'+o.t+'</div></div><div class="hb" style="flex:1"><div class="hl">天井狙い目</div><div class="hv sm">'+(o.h||"—")+'</div></div></div>';
+  else h+='<div class="hero"><div class="hb"><div class="hl">朝イチ狙い目'+(opt.rate==="c56"?"（56枚）":"（等価）")+'</div><div class="hv">'+main+'</div></div>'+
+    (opt.rate==="eq"&&o.a.c56&&o.a.c56!=="—"?'<div class="hb"><div class="hl">56枚交換</div><div class="hv sm">'+o.a.c56+'</div></div>':'')+
+    '<div class="hb"><div class="hl">リセット恩恵の強さ</div>'+bars(o.s)+'</div></div>';
+  h+='<div class="btnrow"><button class="btn pri" data-d="'+o.n+'">詳細・示唆・解析</button></div></div>';
+  return h;}
+function table(list){
+  let h='<table><thead><tr><th style="width:20%">機種</th><th style="width:20%">天井</th><th style="width:18%">天井狙い目</th><th style="width:18%">朝イチ</th><th>示唆</th></tr></thead><tbody>';
+  list.forEach(o=>{h+='<tr><td>'+o.n+'<br><span style="color:var(--host-fg-muted);font-size:10px">'+o.m+'</span></td><td>'+o.t+'</td><td>'+(o.h||"—")+'</td><td>'+(o.a&&o.a.eq||"—")+'</td><td style="font-size:10.5px">'+(hasShisa(o.n)?"あり":"—")+'</td></tr>';});
+  return h+"</tbody></table>";}
+function render(){
+  if(view==="detail")return;
+  let list=DATA.filter(pass);
+  if(tab!=="all"){if(tab==="asa")list.sort((a,b)=>a.an-b.an);else list.sort((a,b)=>b.s-a.s||a.an-b.an);}
+  else list=list.slice().sort((a,b)=>b.s-a.s);
+  $("cnt").textContent=list.length+" 機種";
+  if(!list.length){out.innerHTML='<div class="empty">該当する機種がありません</div>';return;}
+  out.innerHTML=tab==="all"?table(list):list.map(o=>card(o,tab==="ten")).join("");
+  out.querySelectorAll("[data-f]").forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.f;favs.has(k)?favs.delete(k):favs.add(k);S(LS.f,[...favs]);render();});
+  out.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>openDetail(b.dataset.d));}
+
+/* ================= detail ================= */
+async function openDetail(name){
+  const o=DATA.find(x=>x.n===name);if(!o)return;
+  cur=o;curTab="yame";view="detail";readerUrl=null;readerMd="";
+  $("listView").style.display="none";$("detailView").style.display="block";
+  await drawDetail();try{window.scrollTo(0,0);}catch(e){}}
+
+function drawDetail(){
+  const o=cur,d=$("detailView"),isV=favs.has(o.n);
+  let h='<div class="dhead"><button class="btn" id="backBtn">← 戻る</button>'+
+    '<div class="dtitle">'+o.n+'</div><button class="fav '+(isV?"on":"")+'" id="dfav">'+(isV?"★":"☆")+'</button></div>'+
+    '<div class="cm" style="margin-bottom:10px">'+o.m+' ・ '+o.y+'年導入</div>';
+  h+='<div class="dtabs">'+['yame:狙い目','shisa:示唆・判別','reader:解析を読む','photo:写真','memo:メモ']
+    .map(x=>{const p=x.split(":");return '<button data-dt="'+p[0]+'" class="'+(curTab===p[0]?"on":"")+'">'+p[1]+'</button>';}).join("")+'</div>';
+
+  if(curTab==="yame"){
+    h+='<div class="sec"><div class="kv"><div class="k">朝イチ狙い目（等価）</div><div>'+((o.a&&o.a.eq)||"—")+'</div></div>'+
+      '<div class="kv"><div class="k">朝イチ狙い目（56枚）</div><div>'+((o.a&&o.a.c56)||"—")+'</div></div>'+
+      '<div class="kv"><div class="k">天井</div><div>'+o.t+'</div></div>'+
+      '<div class="kv"><div class="k">天井狙い目</div><div>'+(o.h||"—")+'</div></div>'+
+      '<div class="kv"><div class="k">リセット恩恵</div><div>'+(o.b||"—")+'</div></div>'+
+      '<div class="kv"><div class="k">リセット判別</div><div class="'+(String(o.j).indexOf("不可")===0?"warn":"")+'">'+(o.j||"—")+'</div></div>'+
+      '<div class="kv"><div class="k">やめ時</div><div>'+(o.ym||"—")+'</div></div></div>';
+  }
+  if(curTab==="shisa"){
+    const secs=shisaOf(o.n);
+    if(!secs.length)h+='<div class="sec"><div class="empty">内蔵の示唆データは未収録。「解析を読む」タブでサイトの解析を表示するか、下のボタンで追記できます。</div></div>';
+    else secs.forEach(s=>{h+='<div class="sec"><h4>'+s.t+'</h4><table><tbody>'+s.rows.map(r=>'<tr><td class="k">'+r[0]+'</td><td>'+r[1]+'</td></tr>').join("")+'</tbody></table></div>';});
+    h+='<div class="btnrow"><button class="btn" id="addSec">示唆メモを追記</button></div>';
+  }
+  if(curTab==="reader"){
+    h+='<div class="sec"><div class="chips" id="siteChips" style="padding-top:0">'+
+      SITES.map(s=>'<button data-site="'+s.k+'" class="'+(readerSite===s.k?"on":"")+'">'+s.n+'</button>').join("")+'</div>'+
+      '<div class="btnrow"><button class="btn pri" id="loadBtn">この機種の解析を読み込む</button>'+
+      '<button class="btn" id="openBtn" style="display:none">ブラウザで開く</button>'+
+      '<button class="btn" id="reloadBtn" style="display:none">再取得</button></div>'+
+      '<div id="readerStatus" style="font-size:11px;color:var(--host-fg-muted);margin:8px 0"></div>'+
+      '<div class="jump" id="jumpBar"></div><div class="reader" id="readerBox"></div></div>';
+  }
+  if(curTab==="photo"){
+    h+='<div class="sec"><div style="font-size:12px;color:var(--host-fg-muted);line-height:1.6">終了画面・アイキャッチ・実機など、ホールで撮った写真を貼れます。端末内（IndexedDB）に保存され外部送信されません。</div>'+
+      '<div class="btnrow"><button class="btn pri" id="addPhoto">写真を追加（カメラ／アルバム）</button><button class="btn" id="addUrl">画像URLで追加</button></div>'+
+      '<div class="grid" id="phGrid"></div></div>';
+  }
+  if(curTab==="memo"){
+    h+='<div class="sec"><div style="font-size:12px;color:var(--host-fg-muted);margin-bottom:6px">この機種のメモ</div>'+
+      '<textarea class="note" id="memoBox" placeholder="例：◯◯店 全リセ。前日456Gやめ。朝一CZ間200GでCZ非当選→据え置き判断">'+(notes[o.n]||"")+'</textarea></div>';
+  }
+
+  d.innerHTML=h;
+  $("backBtn").onclick=()=>{view="list";cur=null;$("detailView").style.display="none";$("listView").style.display="block";render();};
+  $("dfav").onclick=()=>{favs.has(o.n)?favs.delete(o.n):favs.add(o.n);S(LS.f,[...favs]);drawDetail();};
+  d.querySelectorAll("[data-dt]").forEach(b=>b.onclick=()=>{curTab=b.dataset.dt;drawDetail();});
+  if(curTab==="memo"){const m=$("memoBox");m.oninput=()=>{notes[o.n]=m.value;S(LS.nt,notes);};}
+  if(curTab==="photo")wirePhotos();
+  if(curTab==="shisa")$("addSec").onclick=()=>{
+    const t=prompt("見出し（例：終了画面の示唆）");if(!t)return;
+    const body=prompt("内容（1行1項目。例：虹トロフィー=設定6濃厚）");if(!body)return;
+    const rows=body.split("\n").filter(Boolean).map(l=>{const p=l.split(/[=:：]/);return [p[0].trim(),(p[1]||"").trim()];});
+    userSh[o.n]=(userSh[o.n]||[]).concat([{t:t,rows:rows}]);S(LS.sh,userSh);drawDetail();};
+  if(curTab==="reader")wireReader();
+}
+
+/* ---- reader ---- */
+function wireReader(){
+  document.querySelectorAll("#siteChips button").forEach(b=>b.onclick=()=>{readerSite=b.dataset.site;
+    document.querySelectorAll("#siteChips button").forEach(x=>x.classList.toggle("on",x===b));readerUrl=null;readerMd="";paintReader();});
+  $("loadBtn").onclick=()=>doRead(false);
+  $("reloadBtn").onclick=()=>doRead(true);
+  $("openBtn").onclick=()=>{if(readerUrl)window.open(readerUrl,"_blank");};
+  if(readerMd)paintReader(); else $("readerStatus").textContent="サイトを選んで「読み込む」を押してください。機種ページを自動で探します。";
+}
+function paintReader(){
+  const box=$("readerBox"),jb=$("jumpBar");
+  if(!readerMd){box.innerHTML="";jb.innerHTML="";return;}
+  box.innerHTML=mdToHtml(readerMd);
+  $("openBtn").style.display="";$("reloadBtn").style.display="";
+  const base=readerUrl?readerUrl.replace(/[?#].*$/,"").replace(/\/$/,"")+"/":null;
+  const seen=new Set(),links=[];
+  const re=/\[([^\]]{1,30})\]\(([^)\s]+)\)/g;let m;
+  while((m=re.exec(readerMd))){
+    const t=m[1],u=m[2];
+    if(!base||u.indexOf(base)!==0||u===readerUrl)continue;
+    if(/\/\d+\/?$/.test(u)){
+      const label=t.replace(/\s+/g," ").trim();
+      if(label&&!seen.has(label)&&label.length<20){seen.add(label);links.push([label,u]);}
+    }
+  }
+  jb.innerHTML=links.slice(0,24).map(l=>'<button data-u="'+l[1]+'">'+l[0]+'</button>').join("");
+  jb.querySelectorAll("button").forEach(b=>b.onclick=()=>{readerUrl=b.dataset.u;readerMd="";doRead(false);});
+}
+async function doRead(force){
+  const o=cur,st=$("readerStatus");
+  if(readerBusy)return;readerBusy=true;
+  const site=SITES.find(s=>s.k===readerSite);
+  try{
+    if(!readerUrl||(force&&!readerUrl)){
+      st.textContent=site.n+"で「"+o.n+"」のページを検索中...";
+      const u=await resolvePage(site,o.n);
+      if(!u){st.textContent=site.n+"でページが見つかりませんでした。別のサイトを試してください。";readerBusy=false;return;}
+      readerUrl=u;
+    }
+    st.textContent="本文を取得中...（初回は数秒かかります）";
+    const md=await loadPage(readerUrl,force);
+    if(!md){st.textContent="本文を取得できませんでした（プロキシ混雑の可能性）。再取得を試してください。";readerBusy=false;return;}
+    readerMd=trimNav(md,o.n);
+    st.textContent="表示中："+site.n+" / "+readerUrl.replace(/^https?:\/\//,"").slice(0,60)+"（端末にキャッシュ）";
+    paintReader();
+  }catch(e){st.textContent="エラー："+e.message;}
+  readerBusy=false;
+}
+
+/* ---- photo ---- */
+async function wirePhotos(){
+  const grid=$("phGrid"),o=cur;
+  const recs=await dbGet(o.n);
+  grid.innerHTML=recs.length?"":'<div style="grid-column:1/-1;color:var(--host-fg-muted);font-size:12px;padding:10px 0">まだ写真がありません</div>';
+  recs.forEach(r=>{
+    const div=document.createElement("div");div.className="ph";
+    const img=document.createElement("img");img.src=imgURL(r);img.alt=r.cap||o.n;
+    const cap=document.createElement("div");cap.className="cap";cap.textContent=r.cap||"タップで編集";
+    const del=document.createElement("button");del.className="del";del.textContent="×";
+    del.onclick=async e=>{e.stopPropagation();await dbDel(r.id);urlCache.delete(r.id);wirePhotos();};
+    cap.onclick=async()=>{const v=prompt("キャプション",r.cap||"");if(v===null)return;r.cap=v;await dbPut(r);wirePhotos();};
+    div.appendChild(img);div.appendChild(del);div.appendChild(cap);grid.appendChild(div);
+  });
+  $("addPhoto").onclick=()=>{const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;
+    inp.setAttribute("capture","environment");
+    inp.onchange=async()=>{for(const f of [...inp.files]){const b=await resize(f,1280);await dbPut({m:o.n,blob:b,cap:"",at:Date.now()});}wirePhotos();};
+    inp.click();};
+  $("addUrl").onclick=async()=>{const u=prompt("画像URL");if(!u)return;const c=prompt("キャプション","")||"";
+    await dbPut({m:o.n,url:u,cap:c,at:Date.now()});wirePhotos();};
+}
+
+/* ================= ui ================= */
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("on",x===b));render();});
+document.querySelectorAll("#chips button").forEach(b=>b.onclick=()=>{yFilter=b.dataset.y;
+  document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("on",x===b));render();});
+$("q").oninput=render;
+$("gearBtn").onclick=()=>{$("panel").classList.toggle("on");$("gearBtn").classList.toggle("on");};
+$("refreshBtn").onclick=refresh;
+document.querySelectorAll("#rateSeg button").forEach(b=>b.onclick=()=>{opt.rate=b.dataset.rate;S(LS.op,opt);
+  document.querySelectorAll("#rateSeg button").forEach(x=>x.classList.toggle("on",x===b));view==="detail"?drawDetail():render();});
+$("autoBtn").onclick=()=>{opt.auto=!opt.auto;S(LS.op,opt);$("autoBtn").textContent=opt.auto?"ON":"OFF";};
+$("favBtn").onclick=()=>{opt.favOnly=!opt.favOnly;S(LS.op,opt);$("favBtn").textContent=opt.favOnly?"ON":"OFF";yFilter=opt.favOnly?"fav":"all";
+  document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("on",x.dataset.y===yFilter));render();};
+$("clearPage").onclick=async()=>{await pageClear();updCache();setStatus("","解析キャッシュを削除しました");};
+$("resetBtn").onclick=()=>{if(!confirm("更新データを破棄して初期状態に戻しますか？"))return;
+  DATA=JSON.parse(JSON.stringify(BUNDLED));S(LS.d,DATA);meta={t:0,src:""};S(LS.mt,meta);setStatus("","初期データに戻しました");render();};
+$("expBtn").onclick=()=>{const blob=new Blob([JSON.stringify({v:3,at:Date.now(),data:DATA,favs:[...favs],notes:notes,shisa:userSh,ids:idMap},null,1)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="pachislo-data-"+new Date().toISOString().slice(0,10)+".json";a.click();};
+$("impBtn").onclick=()=>{const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{const j=JSON.parse(r.result);if(Array.isArray(j.data)){DATA=j.data;S(LS.d,DATA);
+      if(j.favs){favs=new Set(j.favs);S(LS.f,[...favs]);}if(j.notes){notes=j.notes;S(LS.nt,notes);}
+      if(j.shisa){userSh=j.shisa;S(LS.sh,userSh);}if(j.ids){idMap=j.ids;S(LS.id,idMap);}
+      setStatus("","JSONを読み込みました");render();}}catch(e){alert("読み込めませんでした");}};
+    r.readAsText(f);};i.click();};
+
+/* ================= PWA ================= */
+try{const icon="data:image/svg+xml,"+enc('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="100" fill="#1d4ed8"/><text x="256" y="345" font-size="260" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">7</text></svg>');
+  const mf={name:"パチスロ 攻略ツール",short_name:"スロ攻略",start_url:".",scope:".",display:"standalone",orientation:"portrait",background_color:"#0b1220",theme_color:"#0b1220",icons:[{src:icon,sizes:"any",type:"image/svg+xml"}]};
+  const l=document.createElement("link");l.rel="manifest";l.href="data:application/manifest+json;charset=utf-8,"+enc(JSON.stringify(mf));
+  (document.head||document.body).appendChild(l);}catch(e){}
+
+async function updCache(){try{const n=await pageCount();$("cacheInfo").textContent=n+" ページ";}catch(e){$("cacheInfo").textContent="—";}}
+
+/* ================= boot ================= */
+(async function(){
+  $("autoBtn").textContent=opt.auto?"ON":"OFF";
+  $("favBtn").textContent=opt.favOnly?"ON":"OFF";
+  if(opt.favOnly)yFilter="fav";
+  document.querySelectorAll("#chips button").forEach(x=>x.classList.toggle("on",x.dataset.y===yFilter));
+  document.querySelectorAll("#rateSeg button").forEach(x=>x.classList.toggle("on",x.dataset.rate===opt.rate));
+  $("lastUpd").textContent=meta.t?stamp(new Date(meta.t))+"（"+meta.src+"）":"—";
+  $("verline").textContent=DATA.length+"機種 / 示唆"+Object.keys(SHISA).length+"機種 / 解析リーダー内蔵";
+  setStatus("",meta.t?"保存済みデータを使用中":"初期データを使用中");
+  render(); updCache();
+  const age=Date.now()-(meta.t||0);
+  if(opt.auto&&age>6*3600*1000)refresh();
+})();
+</script>
